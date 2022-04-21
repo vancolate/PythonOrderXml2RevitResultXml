@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "PythonOrderXml2RevitResultXml": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\le\\Desktop\\Input test 01-20220416A\\Input test 01-20220416A.xml\" \"C:\\Users\\le\\Desktop\\PythonOrder_allbend.xml\""
+    }
+  }
+}
