@@ -6,29 +6,36 @@ using System.Linq;
 
 namespace PythonOrderXml2RevitResultXml
 {
-    class Program
+    public class MainProgram
     {
+        public MainProgram(string[] args)
+        {
+            Main(args);
+        }
         static void Main(string[] args)
         {
             String path_RevitData;
             String path_PythonOrder;
+            String savePath_RevitResult;
 
-            if (args.Length == 0) 
+            if (args.Length < 1) 
             {
-                Console.WriteLine("参数1:RevitData路径,参数2:Python输出的Order路径.");
-                Console.WriteLine("或参数1:总集Python输出Order路径");
-                Console.ReadKey();
-                return;
+                //Console.WriteLine("参数1:RevitData路径,参数2:Python输出的Order路径.");
+                Console.WriteLine("参数不够:参数1.RevitOrder(集成RevitData)路径,参数2.输出路径");
+                throw new ArgumentException("参数不够:参数1.RevitOrder(集成RevitData)路径,参数2.输出路径");
+                //Console.ReadKey();
+                //return;
             }
-            else if (args.Length == 1)
+            else
             {
                 path_RevitData= path_PythonOrder = args[0];
+                savePath_RevitResult = args[1];
             }
-            else 
-            {
-                path_RevitData = args[0];
-                path_PythonOrder = args[1];
-            }
+            //else 
+            //{
+            //    path_RevitData = args[0];
+            //    path_PythonOrder = args[1];
+            //}
 
             //XDocument document_RevitData = XDocument.Load(@"C:\Users\le\Desktop\Input test 01-20220416A\Input test 01-20220416A.xml");   //原始错误案例输出
             //XDocument document_RevitData = XDocument.Load(@"D:\Autodesk\Revit 2020\export\RevitData-allBend.xml");                       //修改错误案例后输出
@@ -42,7 +49,7 @@ namespace PythonOrderXml2RevitResultXml
             //1.管道
             //(1)实体: 水管 风管 线水管分身 线风管分身
             //(2)管道连接件及信息 fitting
-            //3.线管
+            //2.线管
             //(1) 线管输入圆圈
             //(2) 线管实体
             //(3) 线管连接信息
@@ -56,7 +63,7 @@ namespace PythonOrderXml2RevitResultXml
 
 
             //③ 保存
-            document_RevitData.Save(@"RevitResult.xml");
+            document_RevitData.Save(savePath_RevitResult);
         }
 
         private static void AddPipeInfomation(XDocument document_PythonOrder,XDocument document_RevitData)
@@ -170,7 +177,15 @@ namespace PythonOrderXml2RevitResultXml
         {
             var root = document_RevitData.Root;
             var entitys = root.Element("Entitys");
+            //Console.WriteLine("删除Entity");
+            ////(2)Entitys-* 管道连接件及信息 
+            //entitys.RemoveNodes();
+
             var fittings = root.Element("Fittings");
+            Console.WriteLine("删除FittingEntity");
+            //(2)Fitting-* 管道连接件及信息 
+            fittings.RemoveNodes();
+
             List<XElement> deleteList = new List<XElement>();
 
             Console.WriteLine("删除Entitys下InputConnector");
@@ -186,21 +201,19 @@ namespace PythonOrderXml2RevitResultXml
             //1.管道
             //(1)Entitys-Entity-type:Pipe/Duct/Pipe[symbol:DR Line]/Duct[symbol:AC Line] 实体: 风管 水管 线风管分身 线水管分身
             //3.线管
-            //(1) Entitys-Entity-type:AC Input -\d+ \d+ Point/DR Input -\d+ \d+ Point 线管输入圆圈
-            //(2) Entitys-Entity-type:DR Input Line/AC Input Line 线管实体
+            //(1) Entitys-Entity-type:AC Point/DR Input 线管输入圆圈
+            //(2) Entitys-Entity-type:DR Line/AC Line 线管实体
             foreach (XElement entity in entitys.Elements("Entity"))
             {
                 var tempStr = entity.Attribute("type").Value;
-                if (tempStr == "Pipe" || tempStr == "Duct" || tempStr.Contains("Input") || tempStr.Contains("Line"))
+                if (tempStr == "Pipe" || tempStr == "Duct" || tempStr.Contains("Point") || tempStr.Contains("Line"))
                     deleteList.Add(entity);
             }
             foreach (XElement entity in deleteList)
                 entity.Remove();
             deleteList.Clear();
 
-            Console.WriteLine("删除FittingEntity");
-            //(2)Fitting-* 管道连接件及信息 
-            fittings.RemoveNodes();
+
         }
     }
 }
